@@ -1,0 +1,526 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+Xing Ye
+========================================================
+
+> **Tip**:The white wine dataset is used in the fellowing exploratory data analysis.
+
+```{r ,echo=FALSE, message=FALSE, warning=FALSE, packages}
+library(ggplot2)
+library(dplyr)
+library(knitr)
+library(gridExtra)
+library(reshape2)
+library(GGally)
+library(psych)
+```
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/',
+                      echo=FALSE, warning=FALSE, message=FALSE)
+```
+
+### get the column names of the DataFrame and summarize the data
+```{r, echo=FALSE}
+df <- read.csv('C:/Data_Analysis/EDA_course_materials/Project/Data/WineQualityWhites.csv')
+names(df)
+str(df)
+summary(df)
+```
+########################################
+###
+# Unvariable Plot  
+###
+########################################
+### Examine every variable distribution using histograms
+### Plot a histogram of the number of White Wine Quality
+```{r , echo=FALSE}
+table(df$quality)
+ggplot(aes(x = factor(quality)), data = df) +
+   geom_bar() 
+```
+
+> The most quality of the white wine is 6. 
+
+ From the table, we could find the datatype of quality of the white wine must be a discretable variance. So we transform the quality data type into factor.
+
+```{r, echo=FALSE}
+summary(df$alcohol)
+qplot(data = df, x = alcohol, bins = 30)
+qplot(data = df, 
+      x = alcohol, 
+      binwidth = 0.1, 
+      colour = I('white'),
+      geom = 'histogram') +
+  scale_x_continuous(breaks = seq(8.0, 14.2, 0.5)) 
+
+```
+
+  First, we simply describe the alcohol and plot the rough figure. According to the first graph, we change the axis and bin width to present the figure more precise in the second chart. From the later image, we know the least alcohol is 8.00 and the largest alcohol is 14.20. The majority of alcohol is about 9.5 and the trend of the peak shows an obvious fluctuation. 
+
+### Investigate free sulfur dioxide
+```{r , echo=FALSE}
+summary(df$free.sulfur.dioxide)
+qplot(data = df, x = free.sulfur.dioxide, bins = 30)
+ggplot(data = df, 
+       aes(x = free.sulfur.dioxide)) +
+  geom_histogram(binwidth = 2, colour = 'white') +
+  xlim(0, 100)
+```
+
+  The histogram of free.sulfur.dioxide is left skewed with a long tail, for some values are too large to show the distribution properly. In order to better observe the distribution ,we cut the data between 0 and 100.
+
+```{r , echo=FALSE}
+summary(df$fixed.acidity)
+qplot(data = df, x = fixed.acidity, binwidth = 0.1) +
+  scale_x_continuous(breaks = seq(3.8, 14.2, 0.4))
+ggplot(data = subset(df, fixed.acidity < 11),
+       aes(x = fixed.acidity)) +
+  geom_histogram(binwidth = 0.1,
+                 color = 'white',
+                 fill = '#008080') +
+  guides(colour = guide_colorbar())
+```
+
+  We truncate the range of x axis to better observe the figure. The The fixed acidity is centered between 6 and 9, showing an approximate normal distribution with its center near 6.8 and several peaks in the second plot.
+
+```{r ,echo=FALSE}
+summary(df$volatile.acidity)
+x1 <- qplot(data = df, x = volatile.acidity,
+            binwidth = 0.01, geom = 'histogram')
+x2 <- ggplot(data = df) +
+        geom_qq(aes(sample = volatile.acidity))
+grid.arrange(x1, x2, ncol = 1)
+```
+
+> The volatile acidity data has a little left skewed and its center is around 0.3.
+
+```{r , echo=FALSE}
+summary(df$citric.acid)
+qplot(data = df, x = citric.acid, bins = 30)
+qplot(data = df,
+      x = citric.acid,
+      fill = I('#800080'),
+      colour = I('white'),
+      binwidth = 0.01,
+      xlab = 'citric acid (g / dm^3)') + 
+  scale_x_continuous(limits = c(0, 1.0),breaks = seq(0.0, 1.0, 0.05))
+```
+
+  The majority of citric acid data represent the mean is about 3.0 in the normal distribution. However, The data has several discrete peaks because some citric acid data weights occur more often than surroundings.
+
+```{r, echo=FALSE}
+summary(df$density)
+qplot(data = df, x = density, binwidth = 0.0005)
+ggplot(data = subset(df, density <= 1.0 & density > 0.987),
+       aes(x = density, 
+           colour = I('white'),
+           fill = I("#083642"))) +
+  geom_histogram(binwidth = 0.0002) 
+```
+
+  From the first graph, we could find the figure is affected by some anomalies. From the data description, we find out it's rare the density greater than 1.0. So we limit the range and adjust the bn width to view the histogram more clearly.From the second graph, the main density data concentrates from 0.99 to 1.0 and has many small peaks . 
+
+```{r, echo=FALSE}
+summary(df$total.sulfur.dioxide)
+qplot(data = df, x = total.sulfur.dioxide, 
+      binwidth = 4, geom = 'histogram',
+      fill = I("#5b99d4"), colour = I("black"),
+      xlab = 'total sulfur dioxide (mg / dm^3)') +
+  xlim(0, 300) 
+```
+
+```{r, echo=FALSE}
+q1 <- qplot(data = df, x = residual.sugar, binwidth = 0.1)
+q2 <- ggplot(data = df,
+             aes( x = log(residual.sugar), 
+                  fill = I('#ff9900'))) +
+      geom_histogram(bins = 60, colour = 'white')
+grid.arrange(q1, q2, ncol = 1)
+```
+
+  For the second graph, we adjust the axis,the binwidth, log-transformation, for the major data less than 20. The first image show there is a huge spike on the residual data that less 5. To avoid looking at this long tail data, we can tranform the variable by taking the natural log function. Two huge spikes and several small peaks are spotted in the second graph. 
+
+```{r, echo=FALSE}
+qplot(data = df, x = sulphates, binwidth = 0.01, 
+      xlab = 'sulphates (potassium sulphate - g / dm3)')
+```
+
+  Setting the bin width properly, we can have a good sense of the distribution of sulphates nearly a normal distribution.  
+
+```{r, echo=FALSE}
+qplot(data = df, x = chlorides, binwidth = 0.001,
+      xlab = 'chlorides (sodium chloride - g / dm^3)')
+```
+
+  The most data concentrated under 0.1 with two apparent peaks. The graph seem has two peaks with a too long tail. The peaks rise and fall as the chlorides increasing.
+
+```{r, echo=FALSE}
+qplot(data = df, x = pH, binwidth = 0.01, geom = 'histogram')
+```
+
+> The pH is centered around 3.15 with a closely normal distribution.
+
+```{r, echo=FALSE}
+df$free.sulfur.dioxide.rate <- df$free.sulfur.dioxide/df$total.sulfur.dioxide
+summary(df$free.sulfur.dioxide.rate)
+```
+
+ Creat a variable to observe the proportion of free sulfur dioxide in total sulfur dioxide and summarise the new variable.
+
+```{r , echo=FALSE}
+qqnorm(df$free.sulfur.dioxide)
+qqline(df$free.sulfur.dioxide)
+```
+
+  Using the function qqnorm() to compare the data with the normal distribution.The figure shows the tail of the distribution deviates from the diagonal of the normal distribution and the upward curving shape is typical of the left skewed distribution. 
+
+```{r, echo=FALSE}
+qqnorm(df$total.sulfur.dioxide) 
+qqline(df$total.sulfur.dioxide)
+```
+
+  From the graph, we could found the curve of total sulfur dioxide basically conforms to the normal distribution.
+  
+# Univariate Analysis
+
+**What is the structure of your dataset?**
+
+  There are 4898 white wines in the dataset with 13 features(X, fixed.acidity,
+volatile.acidity, citric.acid, residual.sugar, chlorides, density, sulphates, 
+free.sulfur.dioxide, total.sulfur.dioxide, pH, alcohol and quality). The quality and X are int type and the rest are number. For have a good sense of quality, the variable could be ordered by factor variable with 7 levels.The most white wine are in quality 6 and the least in quality 9.
+
+**What is/are the main feature(s) of interest in your dataset?**
+
+  The total sulfur dioxide, free sulfur dioxide are my aimed features. The reason I choose the two variables is the effect of the sulfur in  white wine. Does the form of sulfur dioxide impact the quality?
+  
+**What other features in the dataset do you think will help support your investigation into your feature(s) of interest?**
+
+ The density, residual sugar and pH may contribute to my investigation because the sulfate are affected by pH in the wine. The residual might impact the density. 
+
+**Did you create any new variables from existing variables in the dataset?**
+  
+  Yes, I creat a new variable called free sulfur dioxide rate.
+
+**Of the features you investigated, were there any unusual distributions? Did you perform any operations on the data to tidy, adjust, or change the form of the data? If so, why did you do this? **
+
+  I change the data type of some variances to observe the distributions more convenient. Excepted the alcohol, the other features all has the outliers in a varying degrees. There are several unusual peaks in the distribution of citric acid.
+
+# Bivariate Plot Section
+
+> Plot the distributions in one graph.
+
+```{r ,echo=FALSE}
+# exact the variables
+free.sulfur.dioxide <- data_frame(Amount = df$free.sulfur.dioxide, name = 'free.sulfur.dioxide')
+total_sulfur_dioxide <- df['total.sulfur.dioxide']
+#make a new column in each that will be a variable to identify where they came from later.
+total_sulfur_dioxide$name <- 'total.sulfur.dioxide'
+total_sulfur_dioxide$Amount <- total_sulfur_dioxide$total.sulfur.dioxide
+total_sulfur_dioxide$total.sulfur.dioxide <- NULL
+#and combine into new data frame sulfur
+sulfur <- rbind(free.sulfur.dioxide, total_sulfur_dioxide)
+ggplot(sulfur, 
+       aes(Amount, fill = name)) +
+  geom_density(alpha = 0.2) +
+  scale_x_continuous(limits = c(0, 300)) +
+  labs(x = 'Amount  mg/(dm^3)',
+       y = 'Density',
+       title = 'The distribution of free.sulfur.dioxide and total.sulfur.dioxide') 
+```
+
+  Observing the two variances in the same figure. The plots confirms our previous analysis. free sulfur dioxide left skewed and total sulfur dioxide shows a closely normal distribution.
+Then, we inqurity the distribution by the hexagonal heatmap of counts.
+
+```{r, echo=FALSE}
+ggplot(data = df, 
+       aes(y = total.sulfur.dioxide, x = free.sulfur.dioxide)) +
+  geom_bin2d(binwidth = 6) 
+```
+
+> Acquire the density plot of the most quality wine
+
+```{r, echo=FALSE}
+ggplot(data = subset(df, quality==6), 
+       aes(y = total.sulfur.dioxide, 
+           x = free.sulfur.dioxide)) +
+  stat_density_2d(aes(fill = ..level..),
+                  geom = "polygon") +
+  scale_fill_gradient2()
+```
+
+  From the two graph, It spreads out from a region centered around (30, 120).
+
+```{r , echo=FALSE}
+ggplot(data = df, 
+       aes(x = free.sulfur.dioxide, 
+           y = total.sulfur.dioxide)) + 
+  coord_cartesian(xlim = c(0, quantile(df$free.sulfur.dioxide, 0.99)),
+                  ylim = c(0, quantile(df$total.sulfur.dioxide, 0.99))) +
+  geom_point(alpha = 1/10) +
+  geom_smooth(method = 'lm') 
+by(df$free.sulfur.dioxide, df$quality, summary)
+```
+
+  We use the linear model to represent the tend with 99 percent data to present the the model of the most data. Then, We extract the most two quality subset data.
+  
+```{r, echo=FALSE}
+df.Table1 <- subset(df, quality ==6|quality == 5)%>%
+              group_by(free.sulfur.dioxide, quality)%>%
+              filter(free.sulfur.dioxide < 100) %>%
+              summarize(mean_tsd= mean(as.numeric(total.sulfur.dioxide)),
+                        median_tsd = median(as.numeric(total.sulfur.dioxide)),
+                        n = n())%>%
+              ungroup()%>%
+              arrange(free.sulfur.dioxide)
+
+df.Table1$quality <- factor(df.Table1$quality, 
+                            labels=c('Q5','Q6'))
+head(df.Table1)
+summary(is.na(df.Table1))
+```
+  
+```{r , echo=FALSE}
+df.Table1.wide <- dcast(df.Table1,
+                        free.sulfur.dioxide~quality,
+                        value.var = 'median_tsd')
+
+head(df.Table1.wide)
+summary(is.na(df.Table1.wide))
+```
+
+  Investigating the Correlation coefficient of each variable in the datafrme.
+  
+```{r, echo=FALSE, Correlation_coefficient}
+df_subset = df[,c( "quality","density", "residual.sugar",
+                   "alcohol", "free.sulfur.dioxide",
+                   "total.sulfur.dioxide", "sulphates")]
+## Plot the correlation matrix
+corPlot(df_subset, 
+        numbers=FALSE,
+        upper=FALSE,
+        diag=FALSE,
+        xlas = 3) 
+```
+
+  We could get the correlation coefficient matrix making a good sense of the relations in different variables. According to the results, we discovered the total sulfur dioxide have a strong relation with density and there are tree variables strongly related to each other.First, we exact the tree variables.
+Then, we plot the density and total sulfur dioxide by using scatter plot and suitable limitation and transparency.
+
+```{r,echo=FALSE, Scatter_Matrix}
+most_quality <- subset(df_subset,quality>4&quality<8)
+quality <- factor(most_quality$quality)
+# Plot the scatter matrix
+scat_names <- c("quality","density", "residual.sugar",
+                "free.sulfur.dioxide","total.sulfur.dioxide","alcohol")
+
+pairs.panels(most_quality[scat_names],
+             bg=c('blue',"skyblue",'lightblue'),
+             pch=21,
+             main="Affect varies by the top three Quality")
+# save the figure
+ggsave('affect.png', width = 7, heigh = 5)
+```
+
+> Using the scattermatrix to plot the most count three quality with six interested features
+
+
+```{r, echo=FALSE}
+# Correlation Coefficient between residual sugar and alcohol
+cor(df$residual.sugar, df$alcohol)
+# Correlation Coefficient between residual sugar and density
+cor(df$residual.sugar, df$density)
+# Correlation Coefficient between density and alcohol
+cor(df$density, df$alcohol)
+```
+
+> Correlation Coefficient among residual.sugar vs alcohol, residual.sugar vs  density and density vs alcohol.
+
+ According to the correlation coefficient results, The stongest correlation is between residual sugar and density, the weakest are residual sugar and alcohol. 
+
+```{r, echo=FALSE}
+ggplot(data = df,
+       aes(y = density, 
+           x = total.sulfur.dioxide), 
+           xlim = c(0,400)) +
+  geom_violin(alpha = 0.5) +
+  coord_flip() +
+  geom_point(alpha = 1/10) +
+  ylab('Density (g / cm^3)') +
+  scale_y_continuous(limits = c(0.987, 1.005))
+```
+
+  From the graph, we can discover the total sulfur dioxide increases as the density adding.
+
+```{r, echo=FALSE}
+ggplot(data = df, 
+       # tidy the density data to show the curve more clearly 
+       aes(x = residual.sugar, y = round(100*density, 2)/100)
+      ) + 
+  coord_cartesian(xlim = c(0.6, 20), ylim = c(0.987, 1.005)) +
+  geom_point(alpha = 0.2, 
+             fill = I('#F79420'), 
+             color = I('#F79420'),
+             shape = 21) +
+  geom_smooth(method = 'gam') +
+  labs(y = 'Density' )
+```
+
+  From the figure, we know that the density increase as the residual sugar adding. The points overplotted seriously with residual sugar less 20.
+
+```{r , echo=FALSE}
+qplot(data = df, 
+       x = density,
+       binwidth = 0.0004,
+       geom = 'histogram', 
+       fill = factor(quality),
+       xlab = 'Density(g/cm^3)',
+       main = 'The density of different quality') +
+  scale_x_continuous(limits = c(0.985, 1.005)) +
+  scale_fill_brewer(palette = "BuGn")
+```
+
+  From the plots, The image show the count of the density vary with different quality
+
+# Bivariate Analysis
+
+**Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in the dataset?**
+
+   First, I guess the sulphates might impact the free sulfur dioxide rate. The result shows sulphates has no strong linear relationship with free sulfur dioxide rate which the correlation coefficient is only -0.022. 
+
+**Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?**
+
+   Yes, I discover the residual sugar is intensely correlated with density. It could be residual sugar own a large relative molecular mass compared the other chemical components in the wine. The sugar belongs to carbohydrates which generally have a huge relative molecular mass in chemistry.  
+   
+**What was the strongest relationship you found?**
+
+ The relationship between residual sugar and density because its correlation coefficient up to 0.84 which means a intense relation.
+
+# Multivariate Plot Section
+
+```{r, echo=FALSE, Multivariate_Plot_Section}
+ggplot(data = df, 
+       aes(x = factor(quality), 
+           y = round(free.sulfur.dioxide/total.sulfur.dioxide,2))) +
+  geom_boxplot()
+```
+
+  The image show the boxplot the free sulfur dioxide rate after rounding it to two decimals.Then, We extract the most two quality subset data.
+```{r, echo=FALSE}
+df.Table1 <- subset(df, quality ==6|quality == 5)%>%
+              group_by(free.sulfur.dioxide, quality)%>%
+              filter(free.sulfur.dioxide < 100) %>%
+              summarize(mean_tsd= mean(as.numeric(total.sulfur.dioxide)),
+                        median_tsd = median(as.numeric(total.sulfur.dioxide)),
+                        n = n())%>%
+              ungroup()%>%
+              arrange(free.sulfur.dioxide)
+
+df.Table1$quality <- factor(df.Table1$quality, 
+                            labels=c('Q5','Q6'))
+head(df.Table1)
+# plot the free sulfur dioxide vs the median of total sulfur dioxide 
+ggplot(data = df.Table1, 
+       aes(x = free.sulfur.dioxide,
+           y =  median_tsd,
+           colour = quality)) +
+  geom_point(aes(shape = quality))  +
+  scale_colour_hue(l=50) + 
+  geom_smooth(method = "lm", se = FALSE) +
+  ylab('Total sulfur dioxide median')
+```
+
+  From the graph, the two linear regression lines are nearly parallel which means the similiar growth rate in the quality 5 and quality 6.  
+
+# Multivariate Analysis
+
+** Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of looking at your feature(s) of interest?**
+
+ The density, alcohol and residual sugar all have a strong relationship with total sulfur dioxide.
+
+** Were there any interesting or surprising interactions between features?**
+
+ The density , alcohol and residual sugar form a mutually reinforcing relation. The correlation coefficient between density and residual sugar up to 0.85. The number of -0.78 means density has a strong negative relationship with alcohol. Moreover, The correlation coefficient between Density with alcohol is -0.46 which indicates it also stand a relative strong relation.
+
+#Final Plots and Summary
+
+## Plot one
+
+```{r ,echo=FALSE, Plot_one}
+ggplot(sulfur, 
+       aes(Amount, fill = name)) +
+  geom_density(alpha = 0.2) +
+  scale_x_continuous(limits = c(0, 300),breaks = seq(0, 300, 30)) +
+  geom_vline(xintercept = 30, linetype = 2) +
+  geom_vline(xintercept = 120, linetype = 2) +
+  labs(x = 'Amount  mg/(dm^3)',
+       y = 'Density',
+       title = 'The distribution of free.sulfur.dioxide and total.sulfur.dioxide') 
+```
+
+>  Plot the two distributions into the same figure confirm the upper analysis about the distributions. 
+
+## Description one
+
+  The first figure show the distribution of the two variables are approximately normal distribution. Compared with total sulfur dioxide, the distribution of free sulfur dioxide is more concentrated because the curve of free sulfur dioxide is more steeper than that in total sulfur dioxide. The mean of free sulfur dioxide near 30 when that of total sulfur dioxide is about 120. 
+  
+## Plot Two
+```{r ,echo = FALSE, Plot_two}
+Quality <- factor(df$quality)
+# inveatigate the free sulfur dioxide between 0 and 100.
+q1 <- ggplot(data = df, 
+             aes(x = free.sulfur.dioxide, 
+                 fill = Quality))+
+        geom_histogram(binwidth = 4, 
+                        colour = 'white') +
+        scale_x_continuous(limits = c(0, 100), 
+                           breaks = seq(0, 100 ,10))+
+        scale_fill_brewer(palette = "BuGn") +
+        labs(x = 'free sulfur dioxide (mg / dm^3)',
+             title = "The Histogram of Free Sulfur Dioxide") +
+        theme_dark()
+# total sulfur dioxide 
+q2 <- qplot(data = df, 
+            x = total.sulfur.dioxide, 
+            binwidth = 10, 
+            fill = Quality,
+            colour = I('white'),
+            main = "The Histogram of Total Sulfur Dioxide",
+            geom = 'histogram') +
+        scale_x_continuous(limits = c(0, 300), breaks = seq(0, 300, 30)) +
+        xlab('total sulfur dioxide (mg / dm^3)') +
+        scale_fill_brewer(palette = "Blues") +
+        theme_dark() 
+grid.arrange(q1, q2, ncol = 1)
+```
+
+
+## Description Two
+
+  The image of free sulfur dioxide show approximately normal distribution with a little left skewed and the distribution of total sulfur dioxide is similar to the one of free sulfur dioxide.However, we should consider the range of x axis. The image show the different quality count in free sulfur dioxide and total sulfur dioxide and the colour don't deepen as the values of x axis adding. But the distribution of higher quality trends to aggregating in the middle of the axis.
+
+## Plot Three
+
+```{r,echo = FALSE, Plot_Three}
+ggplot(data = df, 
+       aes(x = factor(quality), 
+           y = 100*round(free.sulfur.dioxide/total.sulfur.dioxide, 2),
+           fill = Quality)) +
+  geom_boxplot() +
+  scale_fill_brewer(palette = 'Blues') +
+  labs(x = 'factor(quality)', 
+       y = 'Free.sulfur.dioxide/Total.sulfur.dioxide(%)',
+       title = 'The boxplot of Free.sulfur.dioxide rate vs Quality')
+```
+
+## Description Three
+
+  From the graph, we could found Quality 4 has the lowest free sulfur dioxide rate and the quality 8 have the highest rate. According to the position of the median, the image show the median tendency decrease first and then rise. In order to better see the distribution of the boxplot more convenient, we adjust the range of the y axis. Each  quality has the outliers. The median of Quality 9 is obviously much higher than the other which most of the rate is prone to have a high score in quality 9. The more quality count, the more median located center. We only say the median of the rate increasing as the quality improving in the case of the quality located between 4 and 8. The abnormal phenomenon of quality 3 and quality 9 could result from the amount of the two qualities are too less comparing with other qualities. 
+
+# Reflection
+  From the analyze the white wine dataset, we could find some interesting phenomenons while ploting some conditional figures. Our interested features are free sulfur dioxide and total sulfur dioxide. We can discover the amount of sulfur dioxide doesn't impact quality strongly whatever the total sulfur dioxide or free sulfur dioxide. However, the high quality wine is prone to have a high free sulfur dioxide rate and distributes around the mean value in either sulfur dioxide .  
+  Considering the other features, according to the correlation coefficient matrix, we investigate the relation among  density, residual sugar and alcohol. The three variances are related with each other strongly. Apart from that, The density also has a strong relation with total sulfur dioxide. For the powerful relation between residual sugar with density, We think the sugar has a large relative molecular mass compared to other composition in the wine. The same to total sulfur dioxide, the  density increase while total sulfur dioxide adding. 
+  Then, We guess the free sulfur dioxide rate may related with sulphates. The result shows that we were wrong because of the correlation coefficient close to zero that signifies weak relation. Afterwards, we print the density diagram to view the distributions of free sulfur dioxide and total sulfur dioxide. The joint distribution map of the two variables is similar to the 3-D normal distribution. Finally, we check the boxplot of the free sulfur dioxide rate. 
+   During the analysis, the relation between different variables make us confused. The density connect to several variables and how the relations like among these variables doesn't explore. The research isn't fully investigating and it still has some questions to analyze.For example, whether the relation between alcohol and density is a coincide or something need to study.  

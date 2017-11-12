@@ -1,0 +1,4 @@
+[1] https://onlinecourses.science.psu.edu/stat857/node/224
+[2] Chris Chapman , Elea McDonnell Feit :  R for Marketing Research and Analytics
+[3] https://stackoverflow.com/questions/3541713/how-to-plot-two-histograms-together-in-r
+[4] http://www.cookbook-r.com/Graphs/Scatterplots_(ggplot2)/
