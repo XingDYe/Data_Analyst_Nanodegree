@@ -1,0 +1,123 @@
+# Xing Ye
+
+## Stroop Effect
+## Test a Perceptual Phenomenon
+
+```{r, echo=FALSE, package}
+library(lattice)
+library(psych)
+```
+
+  There are two sample of used time groupping by congruence.
+  We wander whether testing time is different among those which colour is consist with word and those colour is harmony with word.So we use the t-test to compare the mean for exactly two sets of data. 
+  
+```{r, echo=FALSE, DataFrame}
+df <- read.csv("C:/Data_Analysis/lesson6_project/stroopdata.csv")
+# check the structure
+str(df)
+# summarize the data
+summary(df)
+# Examine basic descriptive statistics
+describe(df)
+```
+  
+  Then, we change the data  structure into a new data frame with two variables named used time and congruence.
+```{r, echo=FALSE}
+# create a new data frame to exact the two varables and label it respectively.
+cong <- data.frame(used_time = df$Congruent, congruence = "congruent")
+incong <- df["Incongruent"]
+# add a new factor column in incong data frame
+incong$congruence <- c("incongruent")
+# rename the incong data frame
+names(incong) <- c("used_time", "congruence")
+# merge the two data frame by column
+df1 <- rbind(cong, incong)
+# check the structure of the new data frame and summarize it.
+str(df1)
+summary(df1)
+```
+
+  Before applying any statistical test. it's essential to examine the data and check for skew, discontinuities and outliers.Because skewness or outliers violate those assemptions that the data follows a continuous distribution and might lead to inaccuracy. 
+  We plot our data into a boxplot to check for the distribution.
+  
+```{r, echo=FALSE}
+boxplot(used_time~congruence, 
+        data = df1 , horizontal=T,
+        main = "Times with Congruent and Incongruent",
+        xlab = "Time (s)", ylab = "Congruence")
+```
+
+  From the graph, The Incongruent test has two outliers and its median value much larger than that of the congruent test.
+
+```{r, echo=FALSE}
+bi.bars(x = df1$used_time,
+        grp = df1$congruence,
+        zero = TRUE,
+        ylab="Time (s)",
+        main="Time by Congruence and Incongruence")
+```
+
+  From the chart, we could found the congruent test time less than the incongruent time whatever the median  or the quantile.
+
+  We use $\mu_1$ to stand for the mean of the congruent test time and $\mu_2$ represent the mean of the incongruent test.
+  
+>  $H_0$ : $\mu_1 = \mu_2$
+
+>  $H_1$ : $\mu_1 \ne \mu_2$
+
+> Significance level : $\alpha = 0.05$
+
+> one $t$ test :  _t_ = $\frac{(\hat{x} - \mu_0)}{SEM}$
+
+> two $t$ test : _t_ = $\frac{\hat{x}_1 - \hat{x}_2}{\sqrt{(SEM_1)^2 + (SEM_2)^2}}$
+
+> standard error of the mean : _SEM_ = $\frac{\sigma}{\sqrt{N}}$
+
+> degrees of freedom : $df$
+
+>  Sample Size : $N$
+
+
+$H_0$ : There is no difference in the population response time in both congruent and incongruent conditions.
+
+$H_1$ : There is some differences in the population response time in both congruent and incongruent conditions.
+
+
+```{r, echo=FALSE}
+mean(df$Congruent)
+mean(df$Incongruent)
+```
+
+  we see the sample means for our data: mean time is 14.05s for the congruent condition, and 22.02s for the incongruent condition.
+
+```{r, echo=FALSE}
+t.test(used_time~congruence, data = df1, paired=TRUE, var.equal=T)
+```
+
+  The confidence interval is for the difference in means and does not contain 0, which is in accordance with the $t$ critical value indicating a significant difference at the 5% level. According to the degrees of the freedom, we acquire the $t$ critical value with the t-table.
+  
+  There are several significant pieces of information in the results. First, we could see the $t$ statistics value is -8.0207, with a $t$ critical value is 2.069. This means that the null hypothesis of no difference in time by congruence is rejected. The data suggests that the congruent test will cost less time. Next we find that the 95% confidence interval for the difference is -10.02 to -5.91. If there are representative data of a larger population, we can have 95% confidence that the group difference is between in those values. Finally, our sample mean of the differences is -7.964 that has a small difference with the $t$ statistical value.
+
+
+**Q1: What is our independent variable? What is our dependent variable?**
+
+  Independent variable is the congrugence of the two tests. And the dependent variable is the used time of each test.
+
+**Q2a: What is an appropriate set of hypotheses for this task?**
+ 
+  First, We adopt the $t$ test because the sample only has 24 observations without the population standard deviation. Second, considering the tests are planning with two measurements on the same people, we use the paired $t$ test. 
+
+**Q2b: What kind of statistical test do you expect to perform? Justify your choices.**
+
+  The $t$ test based on the assumption that data come from normal distribution is used to test the hypthesis that the two samples may be assumed to come from distributions with the same mean. Besides, The paired $t$ test also assume that such differences have a distribution that is independent of the level.
+  
+**Q6:(Optional) What do you think is responsible for the effects observed? Can you think of an alternative or similar task that would result in a similar effect? Some research about the problem will be helpful for thinking about these two questions!**
+
+  The result is consistent with the observation of the boxplot and histogram. We could perform the two-sample $t$ test without the assumption that the variances are the same ,implementing an $F$ test on the radio of the group variances.
+
+```{r, echo=FALSE}
+var.test(df$Congruent, df$Incongruent)
+```
+   
+   It is seen that the test is not significant, so there is no evidence against the assumption of the variances being identical.
+
